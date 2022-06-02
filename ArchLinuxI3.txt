@@ -1,14 +1,23 @@
-ArchLinux + i3-gaps + Ranger + NeoVim + Alacritty + Firefox
+ArchLinux + BSPWM + Ranger + NeoVim + Alacritty + YandexBrowser
 
 
 Подготовка:
 	1. Загружаемся с загрузочной флешки
-	2. Подключаемся к интернету по кабелю
-		2.1 Можно проверить соеденение с интернетом с помощью утилиты ping google.com
-		2.2 Если не пингует google.com то редактируем подключение к DNS серверу в файле /etc/resulv.conf через редактор nano:		nano /etc/resulv.conf
-		2.3 Дописываем в файл:
-			nameserver 8.8.8.8
-			nameserver 8.8.4.4
+	2. Подключаемся к интернету
+		2.1 По кабелю
+			2.1.1 Можно проверить соеденение с интернетом с помощью утилиты ping google.com -c5
+			2.1.2 Если не пингует google.com то редактируем подключение к DNS серверу в файле /etc/resulv.conf через редактор nvim:
+				nameserver 8.8.8.8
+				nameserver 8.8.4.4
+		2.2 По WiFi
+			2.2.1 Проверяем имя сетевого беспроводного интерфейса командой ip a
+			2.2.2 Разблокируем WiFi адаптер в системе rfkill unblock wifi
+			2.2.3 ip link set "Имя сетевого адаптера" up
+			2.2.4 iwctl:
+				station "Имя сетевого адаптера" connect "Имя точки досупа"
+				exit
+			2.2.5 ping google.com -c5
+			2.2.6 Если не пингует google.com исполняем пункт 2.1.2
 
 
 Разметка диска:
@@ -45,7 +54,7 @@ ArchLinux + i3-gaps + Ranger + NeoVim + Alacritty + Firefox
 
 Настройка базавой системы:
 	1. Устанавливаем базавую систему
-		pacstap -i /mnt base base-devel linux-zen linux-zen-headers linux-firmware dosfstools btrfs-progs intel-ucode iucode-tool nano
+		pacstap -i /mnt base base-devel linux-zen linux-zen-headers linux-firmware dosfstools btrfs-progs intel-ucode iucode-tool neovim
 	
 	2. Создаем файл конфигураций файловых систем диска 
 		genfstab -U /mnt >> /mnt/etc/fstab
@@ -63,24 +72,24 @@ ArchLinux + i3-gaps + Ranger + NeoVim + Alacritty + Firefox
 		hwclock --systohc
 
 	3. Русифицируем систему
-		nano /etc/locale.gen	#Выбираем языки системы, en_US.UTF-8 должен быть открыт ОБЯЗАТЕЛЬНО!
+		nvim /etc/locale.gen	#Выбираем языки системы, en_US.UTF-8 должен быть открыт ОБЯЗАТЕЛЬНО!
 		locale-gen
 
 	4. Прописываем язык системы
-		nano /etc/locale.conf:
+		nvim /etc/locale.conf:
 			LANG=ru_RU.UTF-8	#Локализация для Русского языка
 	
 	5. Локализируем консоль
-		nano /etc/vconsole.conf:
+		nvim /etc/vconsole.conf:
 			KEYMAP=ru
 			FONT=cyr-sun16
 	
 	6. Задаём имя компьютера
-		nano /etc/hostname:
+		nvim /etc/hostname:
 			ARCH	#Моё имя компьютера
 
 	7. Редактируем файл доменных имён
-		nano /etc/hosts:
+		nvim /etc/hosts:
 			127.0.0.1 localhost
 			::1				localhost
 			127.0.0.1 ARCH.localdomain ARCH		#Вместо ARCH вводим своё имя компьютера
@@ -111,7 +120,7 @@ ArchLinux + i3-gaps + Ranger + NeoVim + Alacritty + Firefox
 	1. Входим в систему под пользователя root
 
 	2. Настройка доступа к правам root 
-		nano /etc/sudoers:
+		nvim /etc/sudoers:
 			Раскоментируем строку: %wheel ALL=(ALL) ALL (Она находиться почти в самом низу)
 
 	3. Создаем обычную учётную запись пользователя
@@ -131,42 +140,45 @@ ArchLinux + i3-gaps + Ranger + NeoVim + Alacritty + Firefox
 	
 	8. Перезагружаемся
 		reboot
-	
-	9. Подключаемся к интернету
-		#У меня подключение по кабелю
 
-	10. Открываем репозиторий multilib
+	9. Входим под собственным пользователем
+	
+	10. Подключаемся к интернету по WiFi
+		nmcli d wifi connect "Имя точки доступа" password "Пароль"
+		ping google.com -c5		# Проверяем подключение к сети
+
+	11. Открываем репозиторий multilib
 		sudo nano /etc/pacman.conf:
 			Раскоментируюем строки:
 				[multilib]
 				Include = /etc/pacman.d/mirrorlist
 
-	11. Обновляем репозитории и устанавливаем набор пакетов для видеоускорения
+	12. Обновляем репозитории и устанавливаем набор пакетов для видеоускорения
 		Nvidia:
 			sudo pacman -Syu nvidia-dkms nvidia-utils lib32-nvidia-utils nvidia-settings vulkan-icd-loader lib32-vulkan-icd-loader lib32-opencl-nvidia opencl-nvidia libxnvctrl
 		Intel:
 			sudo pacman -Syu lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-icd-loader lib32-vulkan-icd-loader libva-intel-driver xf86-video-intel
 
-	12. Устанавливаем дополнение к networkmanager
+	13. Устанавливаем дополнение к networkmanager
 		sudo pacman -S network-manager-applet
 
-	13. Перезагружаемся
+	14. Перезагружаемся
 		reboot
 
 
 Добавляем swap файл
 	1. Добавляем файл подкачки(swapfile)
-		touch swapfile
-		chattr +C swapfile
-		fallocate --length "Размер файла"MiB swapfile		#Выбираем размер файла подкачки исходя из размера оперативной памяти
-		sudo chown root swapfile
-		sudo chmod 600 swapfile
-		sudo mkswap swapfile
-		sudo swapon swapfile
+		touch .swapfile
+		chattr +C .swapfile
+		fallocate --length "Размер файла"MiB .swapfile		#Выбираем размер файла подкачки исходя из размера оперативной памяти
+		sudo chown root .swapfile
+		sudo chmod 600 .swapfile
+		sudo mkswap .swapfile
+		sudo swapon .swapfile
 
 	2. Добавляем автомантирование swap файла
 		sudo nvim /etc/fstab:
-			/home/"Имя пользователя"/swapfile			none		swap		defaults		0 0
+			/home/"Имя пользователя"/.swapfile			none		swap		defaults		0 0
 
 	3. Перезагружаемся
 		reboot
@@ -201,8 +213,16 @@ ArchLinux + i3-gaps + Ranger + NeoVim + Alacritty + Firefox
 	1. ln -s /run/media/hassiiyy/"Имя раздела"/"Имя папки" /home/"Имя пользователя"/"Имя папки"
 		
 
-Установка графической оболочки i3:
-	1. sudo pacman -S xorg xorg-xinit i3-gaps alacritty ranger rofi nitrogen picom neovim
+Установка графической оболочки BSPWM:
+	1. sudo pacman -S bspwm sxhkd alacritty ranger rofi nitrogen picom
+
+	2. echo -e "exec sxhkd & \nexec bspwm" >> .xinitrc
+	
+	3. mkdir .config && mkdir .config/bspwm
+
+	4. Копируем конфиг bspwm
+
+	5. sudo chmod 775 ~/.config/bspwm/bspwmrc
 
 	3. Перезагружаемся в графическую оболочку
 		reboot
@@ -284,7 +304,7 @@ ArchLinux + i3-gaps + Ranger + NeoVim + Alacritty + Firefox
 		:PlugInstall
 		
 		
-Настройка файлового менеджера i3-gaps:
+Настройка системы:
 	1. Добавляем файл конфигурации клавиатуры:
 		/etc/X11/xorg.conf.d/00-keyboard.conf:
 			Section "inputClass"
@@ -303,6 +323,8 @@ ArchLinux + i3-gaps + Ranger + NeoVim + Alacritty + Firefox
 		sudo systemctl enable cups.service
 		yay pantum
 		http://localhost:631/
+
+	4. Настраиваем тачпад
 
 	4. Перезагружаемся
 		reboot

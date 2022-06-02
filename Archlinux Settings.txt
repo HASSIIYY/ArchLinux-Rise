@@ -1,0 +1,3 @@
+Настройка времени:
+	0. timedatectl	# Проверка даты и времени
+	1. timedatectl set-time "yyyy-MM-dd hh:mm:ss" # Настройка мастного времени. Пример: timedatectl set-time "2014-05-26 11:13:54"
