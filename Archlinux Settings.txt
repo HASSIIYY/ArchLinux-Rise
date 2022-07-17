@@ -1,3 +1,7 @@
 Настройка времени:
 	0. timedatectl	# Проверка даты и времени
 	1. timedatectl set-time "yyyy-MM-dd hh:mm:ss" # Настройка мастного времени. Пример: timedatectl set-time "2014-05-26 11:13:54"
+
+Записть образа диска:
+	0. lsblk	# Проверка подключённых устройств
+	1. dd bs=4M if=путь/до/archlinux.iso of=/dev/sd"Буква диска" status=progress oflag=sync
